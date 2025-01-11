@@ -1,6 +1,6 @@
 # Clipboard History Manager
 
-Clipboard History Manager is a simple tool to monitor your clipboard, store clipboard content, and manage the saved history.
+Clipboard History Manager is a simple and efficient tool that allows users to manage and store clipboard content. The project provides a way to monitor clipboard changes, view saved clipboard history, and clear the entire clipboard history.
 
 ## Features
 
