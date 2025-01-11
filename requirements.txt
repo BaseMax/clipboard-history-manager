@@ -1,1 +1,3 @@
 pyperclip
+pillow
+python-magic
