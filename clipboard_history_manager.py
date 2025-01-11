@@ -1,119 +1,90 @@
 import os
 import pyperclip
 import time
-import base64
 import argparse
 from datetime import datetime
-from PIL import Image
-import io
-import magic
 
 HISTORY_DIR = 'clipboard_history'
 
-if not os.path.exists(HISTORY_DIR):
-    os.makedirs(HISTORY_DIR)
+VERSION = '1.0.0'
 
-def generate_filename(content_type):
+def create_history_dir():
+    if not os.path.exists(HISTORY_DIR):
+        os.makedirs(HISTORY_DIR)
+
+def generate_filename():
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S%f')
-    return os.path.join(HISTORY_DIR, f"{timestamp}_{content_type}")
+    return os.path.join(HISTORY_DIR, f"{timestamp}_text.txt")
 
 def save_text(content):
-    filename = generate_filename('text.txt')
+    filename = generate_filename()
     with open(filename, 'w') as file:
         file.write(content)
-    return filename
-
-def save_image(image_data, file_type):
-    if file_type == 'image/png':
-        extension = '.png'
-    elif file_type == 'image/jpeg':
-        extension = '.jpg'
-    else:
-        extension = '.img'
-
-    filename = generate_filename(f'image{extension}')
-    image = Image.open(io.BytesIO(image_data))
-    image.save(filename)
-    return filename
-
-def save_binary(content):
-    filename = generate_filename('binary.bin')
-    with open(filename, 'wb') as file:
-        file.write(content)
-    return filename
-
-def detect_content_type(content):
-    if isinstance(content, str):
-        return 'text'
-    
-    file_type = magic.Magic(mime=True).from_buffer(content)
-    
-    if file_type.startswith('image/'):
-        return 'image'
-    else:
-        return 'binary'
-
-def save_content(content):
-    content_type = detect_content_type(content)
-    
-    if content_type == 'text':
-        return save_text(content)
-    elif content_type == 'image':
-        return save_image(content, magic.Magic(mime=True).from_buffer(content))
-    elif content_type == 'binary':
-        return save_binary(content)
 
 def load_history():
-    history = []
-    for filename in os.listdir(HISTORY_DIR):
-        filepath = os.path.join(HISTORY_DIR, filename)
-        with open(filepath, 'rb') as file:
-            history.append({
-                'filename': filename,
-                'content': file.read()
-            })
-    return history
+    return [
+        {'filename': f, 'content': open(os.path.join(HISTORY_DIR, f), 'r').read()}
+        for f in os.listdir(HISTORY_DIR)
+    ]
 
 def show_history():
     history = load_history()
-    if not history:
+    if history:
+        for idx, item in enumerate(history):
+            print(f"{idx + 1}: {item['filename']} - Content: {item['content']}")
+    else:
         print("No clipboard history found.")
-        return
-    for idx, item in enumerate(history):
-        print(f"{idx + 1}: {item['filename']}")
 
 def monitor_clipboard():
     previous_content = None
     while True:
         try:
             current_content = pyperclip.paste()
-
-            if current_content != previous_content:
-                if current_content:
-                    print(f"Clipboard changed, saving text...")
-                    save_content(current_content)
+            if current_content != previous_content and current_content:
+                print("Clipboard changed, saving text...")
+                save_text(current_content)
                 previous_content = current_content
-
             time.sleep(1)
-
         except KeyboardInterrupt:
             print("\nClipboard monitoring stopped.")
             break
 
 def clear_history():
     for filename in os.listdir(HISTORY_DIR):
-        file_path = os.path.join(HISTORY_DIR, filename)
-        os.remove(file_path)
+        os.remove(os.path.join(HISTORY_DIR, filename))
     print("Clipboard history cleared.")
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Clipboard History Manager: A simple tool to manage and store clipboard content.",
+        epilog="You can monitor your clipboard, view the saved history, or clear the clipboard history."
+    )
+    parser.add_argument(
+        '-m', '--monitor',
+        action='store_true',
+        help="Monitor clipboard for changes and automatically save new clipboard content."
+    )
+    parser.add_argument(
+        '-v', '--view',
+        action='store_true',
+        help="View the saved clipboard history (list of previously copied content)."
+    )
+    parser.add_argument(
+        '-c', '--clear',
+        action='store_true',
+        help="Clear the entire clipboard history by deleting all saved files."
+    )
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=f'%(prog)s {VERSION}',
+        help="Show the version of the program."
+    )
+    return parser.parse_args()
+
 def main():
-    parser = argparse.ArgumentParser(description="Clipboard History Manager")
-    parser.add_argument('-m', '--monitor', action='store_true', help="Monitor clipboard history.")
-    parser.add_argument('-v', '--view', action='store_true', help="View clipboard history.")
-    parser.add_argument('-c', '--clear', action='store_true', help="Clear clipboard history.")
-    
-    args = parser.parse_args()
-    
+    create_history_dir()
+    args = parse_args()
     if args.monitor:
         monitor_clipboard()
     elif args.view:
