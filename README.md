@@ -24,6 +24,24 @@ Clipboard History Manager is a simple and efficient tool that allows users to ma
 
 ## Usage
 
+- **Help message**:
+    
+    ```bash
+    $ python clipboard_history_manager.py --help
+    usage: clipboard_history_manager.py [-h] [-m] [-v] [-c] [--version]
+    
+    Clipboard History Manager: A simple tool to manage and store clipboard content.
+    
+    options:
+      -h, --help     show this help message and exit
+      -m, --monitor  Monitor clipboard for changes and automatically save new clipboard content.
+      -v, --view     View the saved clipboard history (list of previously copied content).
+      -c, --clear    Clear the entire clipboard history by deleting all saved files.
+      --version      Show the version of the program.
+    
+    You can monitor your clipboard, view the saved history, or clear the clipboard history.
+    ```
+
 - **Monitor clipboard for changes**:
 
     ```bash
